@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   telegram-bot:
-    image: fayetom/tgnexus:25.7
+    image: fayetom/tgnexus:25.85
     ports:
       - "32025:32025"
     volumes:
