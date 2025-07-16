@@ -1,0 +1,24 @@
+# RSS 新闻源示例
+# 将这些 URL 复制到网页后台的 RSS 配置中
+
+# 中文新闻源
+https://feeds.bbci.co.uk/zhongwen/simp/rss.xml
+https://rss.cnn.com/rss/edition.rss
+https://www.zhihu.com/rss
+https://sspai.com/feed
+
+# 科技新闻
+https://techcrunch.com/feed/
+https://www.theverge.com/rss/index.xml
+https://arstechnica.com/feed/
+
+# 开发者新闻
+https://dev.to/feed
+https://github.blog/feed/
+https://stackoverflow.blog/feed/
+
+# 注意：
+# 1. 每行一个 RSS URL
+# 2. 以 # 开头的行是注释
+# 3. 确保 RSS 源可以正常访问
+# 4. 建议不要添加太多源，以免生成的摘要过长

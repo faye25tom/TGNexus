@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  telegram-bot:
+    image: fayetom/tgnexus:25.7
+    ports:
+      - "32025:32025"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - DATABASE_URL=sqlite:///data/bot.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:32025/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Bot 配置后台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .config-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .status-badge {
+            font-size: 0.9em;
+        }
+        .btn-action {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <h5 class="text-center mb-4">
+                        <i class="bi bi-robot"></i> Bot 控制台
+                    </h5>
+                    
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#dashboard">
+                                <i class="bi bi-speedometer2"></i> 仪表板
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#telegram-config">
+                                <i class="bi bi-telegram"></i> Telegram 配置
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#gemini-config">
+                                <i class="bi bi-cpu"></i> Gemini 配置
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#rss-config">
+                                <i class="bi bi-rss"></i> RSS 配置
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#prompts-config">
+                                <i class="bi bi-chat-text"></i> Prompt 配置
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- 主内容区 -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Telegram Bot 聊天助手</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <span class="badge bg-{{ 'success' if bot_status == '运行中' else 'danger' }} status-badge me-2">
+                            {{ bot_status }}
+                        </span>
+                        <button class="btn btn-sm btn-outline-secondary btn-action" onclick="restartBot()">
+                            <i class="bi bi-arrow-clockwise"></i> 重启 Bot
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary btn-action" onclick="manualSummary()">
+                            <i class="bi bi-newspaper"></i> 手动摘要
+                        </button>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-dark dropdown-toggle btn-action" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i> 管理员
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="/change-password">
+                                    <i class="bi bi-key"></i> 修改密码
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" onclick="logout()">
+                                    <i class="bi bi-box-arrow-right"></i> 退出登录
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 成功消息 -->
+                {% if request.query_params.get('success') %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    配置更新成功！
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+
+                <!-- Telegram 配置 -->
+                <div id="telegram-config" class="config-section">
+                    <h4><i class="bi bi-telegram text-primary"></i> Telegram 配置</h4>
+                    <form method="post" action="/config/telegram">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="bot_token" class="form-label">Bot Token</label>
+                                <input type="text" class="form-control" id="bot_token" name="bot_token" 
+                                       value="{{ config.telegram.bot_token }}" placeholder="输入 Telegram Bot Token">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="chat_id" class="form-label">聊天 ID</label>
+                                <input type="text" class="form-control" id="chat_id" name="chat_id" 
+                                       value="{{ config.telegram.chat_id }}" placeholder="输入目标聊天 ID">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">
+                            <i class="bi bi-check-lg"></i> 保存配置
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Gemini 配置 -->
+                <div id="gemini-config" class="config-section">
+                    <h4><i class="bi bi-cpu text-success"></i> Gemini AI 配置</h4>
+                    <form method="post" action="/config/gemini">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <label for="api_key" class="form-label">API Key</label>
+                                <input type="password" class="form-control" id="api_key" name="api_key" 
+                                       value="{{ config.gemini.api_key }}" placeholder="输入 Gemini API Key">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="model" class="form-label">模型</label>
+                                <select class="form-select" id="model" name="model">
+                                    <option value="gemini-2.5-flash" {{ 'selected' if config.gemini.model == 'gemini-2.5-flash' else '' }}>
+                                        gemini-2.5-flash (推荐)
+                                    </option>
+                                    <option value="gemini-1.5-flash" {{ 'selected' if config.gemini.model == 'gemini-1.5-flash' else '' }}>
+                                        gemini-1.5-flash
+                                    </option>
+                                    <option value="gemini-1.5-pro" {{ 'selected' if config.gemini.model == 'gemini-1.5-pro' else '' }}>
+                                        gemini-1.5-pro
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-success me-2">
+                                <i class="bi bi-check-lg"></i> 保存配置
+                            </button>
+                            <button type="button" class="btn btn-outline-info" onclick="testGeminiConnection()">
+                                <i class="bi bi-wifi"></i> 测试连接
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- RSS 配置 -->
+                <div id="rss-config" class="config-section">
+                    <h4><i class="bi bi-rss text-warning"></i> RSS 新闻源配置</h4>
+                    <form method="post" action="/config/rss">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <label for="feeds" class="form-label">RSS 源 (每行一个)</label>
+                                <textarea class="form-control" id="feeds" name="feeds" rows="6" 
+                                          placeholder="输入 RSS 源 URL，每行一个">{{ '\n'.join(config.rss.feeds) }}</textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="summary_time" class="form-label">摘要时间</label>
+                                <input type="time" class="form-control" id="summary_time" name="summary_time" 
+                                       value="{{ config.rss.summary_time }}">
+                                <small class="form-text text-muted">每天定时发送新闻摘要的时间</small>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-warning mt-3">
+                            <i class="bi bi-check-lg"></i> 保存配置
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Prompt 配置 -->
+                <div id="prompts-config" class="config-section">
+                    <h4><i class="bi bi-chat-text text-info"></i> Prompt 配置</h4>
+                    <form method="post" action="/config/prompts">
+                        <div class="mb-3">
+                            <label for="news_summary_prompt" class="form-label">新闻摘要 Prompt</label>
+                            <textarea class="form-control" id="news_summary_prompt" name="news_summary_prompt" rows="3">{{ config.prompts.news_summary }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="chat_response_prompt" class="form-label">聊天回复 Prompt</label>
+                            <textarea class="form-control" id="chat_response_prompt" name="chat_response_prompt" rows="3">{{ config.prompts.chat_response }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="trigger_keywords" class="form-label">触发关键词 (逗号分隔)</label>
+                            <input type="text" class="form-control" id="trigger_keywords" name="trigger_keywords" 
+                                   value="{{ ','.join(config.prompts.trigger_keywords) }}" 
+                                   placeholder="@bot,机器人,助手,?,？">
+                        </div>
+                        <button type="submit" class="btn btn-info mt-3">
+                            <i class="bi bi-check-lg"></i> 保存配置
+                        </button>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function restartBot() {
+            try {
+                const response = await fetch('/bot/restart', { method: 'POST' });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('Bot 重启成功！');
+                    location.reload();
+                } else {
+                    alert('Bot 重启失败: ' + result.detail);
+                }
+            } catch (error) {
+                alert('操作失败: ' + error.message);
+            }
+        }
+
+        async function manualSummary() {
+            try {
+                const response = await fetch('/news/manual-summary', { method: 'POST' });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('新闻摘要生成成功！');
+                } else {
+                    alert('生成失败: ' + result.detail);
+                }
+            } catch (error) {
+                alert('操作失败: ' + error.message);
+            }
+        }
+
+        async function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                try {
+                    const response = await fetch('/logout', { method: 'POST' });
+                    if (response.ok) {
+                        window.location.href = '/login';
+                    } else {
+                        alert('退出登录失败');
+                    }
+                } catch (error) {
+                    alert('操作失败: ' + error.message);
+                }
+            }
+        }
+
+        async function testGeminiConnection() {
+            try {
+                // 显示加载状态
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="bi bi-hourglass-split"></i> 测试中...';
+                button.disabled = true;
+
+                const response = await fetch('/gemini/test', { method: 'POST' });
+                const result = await response.json();
+                
+                // 恢复按钮状态
+                button.innerHTML = originalText;
+                button.disabled = false;
+
+                if (result.status === 'success') {
+                    alert('✅ ' + result.message + '\n\n测试响应: ' + (result.response || ''));
+                } else {
+                    alert('❌ ' + result.message);
+                }
+            } catch (error) {
+                // 恢复按钮状态
+                const button = event.target;
+                button.innerHTML = '<i class="bi bi-wifi"></i> 测试连接';
+                button.disabled = false;
+                
+                alert('测试失败: ' + error.message);
+            }
+        }
+
+
+
+        // 平滑滚动到锚点
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
